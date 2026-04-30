@@ -1,10 +1,48 @@
 'use client'
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/src/lib/supabase';
 import { useCart } from '@/src/context/CartContext';
+import { LogOut, User } from 'lucide-react'; 
 
 export default function Header() {
   const { cart, toggleCart } = useCart();
+  const [user, setUser] = useState<any>(null);
+  const [nome, setNome] = useState('');
+  const router = useRouter();
+
+  // Monitora o estado da autenticação
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUser(session.user);
+        setNome(session.user.user_metadata?.nome_completo?.split(' ')[0] || 'Usuário');
+      }
+    };
+
+    checkUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        setUser(session.user);
+        setNome(session.user.user_metadata?.nome_completo?.split(' ')[0] || 'Usuário');
+      } else {
+        setUser(null);
+        setNome('');
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/');
+    router.refresh();
+  };
 
   return (
     <header className="bg-[#0B0B0B] text-white border-b-4 border-[#E21E26] sticky top-0 z-50">
@@ -20,7 +58,7 @@ export default function Header() {
           <input 
             type="text" 
             placeholder="O que você está buscando hoje?" 
-            className="w-full p-3 text-black outline-none border-none text-sm"
+            className="w-full p-3 text-black outline-none border-none text-sm font-medium"
           />
           <button className="bg-[#E21E26] px-6 hover:bg-[#b0181e] transition flex items-center justify-center">
             <i className="fa-solid fa-magnifying-glass"></i>
@@ -29,13 +67,32 @@ export default function Header() {
 
         {/* AÇÕES DO USUÁRIO */}
         <div className="flex items-center gap-6">
-          <Link href="/login" className="hidden lg:flex items-center gap-3 cursor-pointer hover:text-gray-300 transition">
-            <i className="fa-regular fa-circle-user text-2xl text-[#E21E26]"></i>
-            <div className="flex flex-col">
-              <span className="text-[10px] leading-tight uppercase text-gray-400">Entre ou</span>
-              <span className="text-xs font-bold leading-tight">Cadastre-se</span>
+          
+          {user ? (
+            /* ESTADO: LOGADO */
+            <div className="hidden lg:flex items-center gap-4 border-r border-gray-800 pr-6">
+              <div className="flex flex-col items-end">
+                <span className="text-[10px] leading-tight uppercase text-gray-400 font-black">Olá,</span>
+                <span className="text-sm font-black italic uppercase leading-tight text-[#E21E26]">{nome}</span>
+              </div>
+              <button 
+                onClick={handleLogout}
+                className="hover:text-[#E21E26] transition-colors flex items-center gap-1 group"
+                title="Sair"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
             </div>
-          </Link>
+          ) : (
+            /* ESTADO: DESLOGADO  */
+            <Link href="/login" className="hidden lg:flex items-center gap-3 cursor-pointer hover:text-gray-300 transition">
+              <i className="fa-regular fa-circle-user text-2xl text-[#E21E26]"></i>
+              <div className="flex flex-col">
+                <span className="text-[10px] leading-tight uppercase text-gray-400 font-black">Entre ou</span>
+                <span className="text-xs font-bold leading-tight uppercase">Cadastre-se</span>
+              </div>
+            </Link>
+          )}
 
           {/* ÍCONE DO CARRINHO */}
           <button 
@@ -60,7 +117,6 @@ export default function Header() {
             <i className="fa-solid fa-bars text-[#E21E26]"></i> Departamentos
           </li>
 
-          {/* Links apontando para a pasta dinâmica /categoria/[slug] */}
           <li className="text-gray-400 hover:text-white transition">
             <Link href="/categoria/hardware">Hardware</Link>
           </li>
@@ -82,7 +138,6 @@ export default function Header() {
               <i className="fa-solid fa-fire-flame-curved"></i> Ofertas do Dia
             </Link>
           </li>
-          
         </ul>
       </nav>
     </header>
