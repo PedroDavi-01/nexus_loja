@@ -73,7 +73,9 @@ export default function Header() {
             <div className="hidden lg:flex items-center gap-4 border-r border-gray-800 pr-6">
               <div className="flex flex-col items-end">
                 <span className="text-[10px] leading-tight uppercase text-gray-400 font-black">Olá,</span>
-                <span className="text-sm font-black italic uppercase leading-tight text-[#E21E26]">{nome}</span>
+                <span className="text-sm font-black italic uppercase leading-tight text-[#E21E26]">
+                   <Link href="/canto">{nome}</Link>
+                  </span>
               </div>
               <button 
                 onClick={handleLogout}
