@@ -5,13 +5,23 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/src/lib/supabase';
 import { useCart } from '@/src/context/CartContext';
-import { LogOut, User } from 'lucide-react'; 
+import { LogOut, Search } from 'lucide-react'; 
 
 export default function Header() {
   const { cart, toggleCart } = useCart();
   const [user, setUser] = useState<any>(null);
   const [nome, setNome] = useState('');
+  const [searchTerm, setSearchTerm] = useState(''); 
   const router = useRouter();
+
+  // Função para disparar a busca
+  const handleSearch = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (searchTerm.trim()) {
+      // Redireciona para a página de busca com o parâmetro query
+      router.push(`/search?q=${encodeURIComponent(searchTerm.trim())}`);
+    }
+  };
 
   // Monitora o estado da autenticação
   useEffect(() => {
@@ -53,23 +63,30 @@ export default function Header() {
           NEXUS
         </Link>
         
-        {/* BARRA DE BUSCA */}
-        <div className="flex-1 mx-12 hidden md:flex bg-gray-200 rounded overflow-hidden">
+        {/* BARRA DE BUSCA CORRIGIDA */}
+        <form 
+          onSubmit={handleSearch}
+          className="flex-1 mx-12 hidden md:flex bg-gray-200 rounded overflow-hidden border-2 border-transparent focus-within:border-[#E21E26] transition-all"
+        >
           <input 
             type="text" 
             placeholder="O que você está buscando hoje?" 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full p-3 text-black outline-none border-none text-sm font-medium"
           />
-          <button className="bg-[#E21E26] px-6 hover:bg-[#b0181e] transition flex items-center justify-center">
-            <i className="fa-solid fa-magnifying-glass"></i>
+          <button 
+            type="submit"
+            className="bg-[#E21E26] px-6 hover:bg-[#b0181e] transition flex items-center justify-center text-white"
+          >
+            <Search size={18} strokeWidth={3} />
           </button>
-        </div>
+        </form>
 
         {/* AÇÕES DO USUÁRIO */}
         <div className="flex items-center gap-6">
           
           {user ? (
-            /* ESTADO: LOGADO */
             <div className="hidden lg:flex items-center gap-4 border-r border-gray-800 pr-6">
               <div className="flex flex-col items-end">
                 <span className="text-[10px] leading-tight uppercase text-gray-400 font-black">Olá,</span>
@@ -86,7 +103,6 @@ export default function Header() {
               </button>
             </div>
           ) : (
-            /* ESTADO: DESLOGADO  */
             <Link href="/login" className="hidden lg:flex items-center gap-3 cursor-pointer hover:text-gray-300 transition">
               <i className="fa-regular fa-circle-user text-2xl text-[#E21E26]"></i>
               <div className="flex flex-col">
@@ -111,7 +127,7 @@ export default function Header() {
         </div>
       </div>
       
-      {/* NAVEGAÇÃO SECUNDÁRIA (DEPARTAMENTOS) */}
+      {/* NAVEGAÇÃO SECUNDÁRIA */}
       <nav className="bg-[#1F1F1F] py-3 shadow-inner">
         <ul className="container mx-auto px-4 flex gap-8 text-[13px] font-bold uppercase overflow-x-auto no-scrollbar whitespace-nowrap items-center">
           

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, ImageUp, Check } from 'lucide-react'
+import { X, ImageUp } from 'lucide-react'
 import { supabase } from '@/src/lib/supabase'
 
 interface ProductModalProps {
@@ -14,6 +14,8 @@ interface ProductModalProps {
 export default function ProductModal({ isOpen, onClose, onSuccess, produtoParaEditar }: ProductModalProps) {
   const [nome, setNome] = useState('')
   const [preco, setPreco] = useState('')
+  const [precoAntigo, setPrecoAntigo] = useState('')
+  const [marca, setMarca] = useState('')
   const [categoria, setCategoria] = useState('')
   const [imagemUrl, setImagemUrl] = useState('')
   const [desconto, setDesconto] = useState('')
@@ -23,11 +25,13 @@ export default function ProductModal({ isOpen, onClose, onSuccess, produtoParaEd
     if (produtoParaEditar) {
       setNome(produtoParaEditar.nome)
       setPreco(produtoParaEditar.preco.toString())
+      setPrecoAntigo(produtoParaEditar.preco_antigo?.toString() || '')
+      setMarca(produtoParaEditar.marca || '')
       setCategoria(produtoParaEditar.categoria || '')
       setImagemUrl(produtoParaEditar.imagem_url)
       setDesconto(produtoParaEditar.desconto?.toString() || '')
     } else {
-      setNome(''); setPreco(''); setCategoria(''); setImagemUrl(''); setDesconto('')
+      setNome(''); setPreco(''); setPrecoAntigo(''); setMarca(''); setCategoria(''); setImagemUrl(''); setDesconto('')
     }
   }, [produtoParaEditar, isOpen])
 
@@ -55,6 +59,8 @@ export default function ProductModal({ isOpen, onClose, onSuccess, produtoParaEd
     const dadosProduto = {
       nome,
       preco: parseFloat(preco),
+      preco_antigo: precoAntigo ? parseFloat(precoAntigo) : null,
+      marca: marca || 'Nexus Gaming',
       categoria: categoria.toLowerCase().trim(),
       imagem_url: imagemUrl,
       desconto: desconto ? parseInt(desconto) : null,
@@ -87,7 +93,6 @@ export default function ProductModal({ isOpen, onClose, onSuccess, produtoParaEd
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-300">
       <div className="bg-white w-full max-w-xl rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
         
-        {/* HEADER ESTILO NEXUS */}
         <div className="bg-[#E21E26] p-6 flex justify-between items-center shadow-md">
           <div className="flex flex-col">
             <h2 className="text-white font-black italic uppercase tracking-tighter text-2xl">
@@ -104,8 +109,6 @@ export default function ProductModal({ isOpen, onClose, onSuccess, produtoParaEd
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 overflow-y-auto no-scrollbar flex flex-col gap-6">
-          
-          {/* UPLOAD DE IMAGEM BONITO */}
           <div className="flex flex-col gap-3">
             <label className="text-[11px] font-black uppercase text-gray-500 flex items-center gap-2">
               <ImageUp size={14} /> Visual do Produto
@@ -143,7 +146,6 @@ export default function ProductModal({ isOpen, onClose, onSuccess, produtoParaEd
             />
           </div>
 
-          {/* DADOS TÉCNICOS */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="md:col-span-2">
               <label className="text-[11px] font-black uppercase text-gray-500">Nome do Produto</label>
@@ -152,36 +154,41 @@ export default function ProductModal({ isOpen, onClose, onSuccess, produtoParaEd
             </div>
 
             <div>
-              <label className="text-[11px] font-black uppercase text-gray-500">Preço (R$)</label>
+              <label className="text-[11px] font-black uppercase text-gray-500">Marca</label>
+              <input type="text" value={marca} onChange={e => setMarca(e.target.value)} placeholder="Ex: Nexus"
+                className="w-full p-4 bg-gray-100 rounded-xl text-black font-semibold outline-none border-2 border-transparent focus:border-[#E21E26] transition-all" />
+            </div>
+
+            <div>
+              <label className="text-[11px] font-black uppercase text-gray-500">Categoria</label>
+              <input type="text" value={categoria} onChange={e => setCategoria(e.target.value)} placeholder="hardware, perifericos..."
+                className="w-full p-4 bg-gray-100 rounded-xl text-black font-semibold outline-none border-2 border-transparent focus:border-[#E21E26] transition-all" />
+            </div>
+
+            <div>
+              <label className="text-[11px] font-black uppercase text-gray-500">Preço Atual (R$)</label>
               <input type="number" step="0.01" value={preco} onChange={e => setPreco(e.target.value)} required placeholder="0,00"
                 className="w-full p-4 bg-gray-100 rounded-xl text-black font-semibold outline-none border-2 border-transparent focus:border-[#E21E26] transition-all" />
             </div>
 
             <div>
-              <label className="text-[11px] font-black uppercase text-gray-500">Desconto (%)</label>
-              <input type="number" value={desconto} onChange={e => setDesconto(e.target.value)} placeholder="Opcional"
+              <label className="text-[11px] font-black uppercase text-gray-500">Preço Riscado (R$)</label>
+              <input type="number" step="0.01" value={precoAntigo} onChange={e => setPrecoAntigo(e.target.value)} placeholder="Opcional"
                 className="w-full p-4 bg-gray-100 rounded-xl text-black font-semibold outline-none border-2 border-transparent focus:border-[#E21E26] transition-all" />
             </div>
 
             <div className="md:col-span-2">
-              <label className="text-[11px] font-black uppercase text-gray-500">Categoria</label>
-              <input type="text" value={categoria} onChange={e => setCategoria(e.target.value)} placeholder="hardware, perifericos, audio..."
+              <label className="text-[11px] font-black uppercase text-gray-500">Desconto (%)</label>
+              <input type="number" value={desconto} onChange={e => setDesconto(e.target.value)} placeholder="Ex: 20"
                 className="w-full p-4 bg-gray-100 rounded-xl text-black font-semibold outline-none border-2 border-transparent focus:border-[#E21E26] transition-all" />
             </div>
           </div>
 
-          {/* BOTÃO SALVAR */}
           <button 
             disabled={loading} 
             className="mt-4 bg-black text-white py-5 rounded-2xl font-black uppercase italic text-lg hover:bg-[#E21E26] transition-all disabled:opacity-50 flex items-center justify-center gap-3 shadow-xl active:scale-95"
           >
-            {loading ? (
-              <span className="animate-pulse">Processando...</span>
-            ) : (
-              <>
-                {produtoParaEditar ? 'Salvar Alterações' : 'Cadastrar na Loja'}
-              </>
-            )}
+            {loading ? <span className="animate-pulse">Processando...</span> : (produtoParaEditar ? 'Salvar Alterações' : 'Cadastrar na Loja')}
           </button>
         </form>
       </div>
