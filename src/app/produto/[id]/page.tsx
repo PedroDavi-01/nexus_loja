@@ -17,6 +17,9 @@ export default function ProdutoDetalhes() {
   const [freteResult, setFreteResult] = useState<any>(null);
   const [loadingFrete, setLoadingFrete] = useState(false);
 
+  // ESTADO PARA CONTROLAR A FOTO EXIBIDA NO CARROSSEL
+  const [fotoAtiva, setFotoAtiva] = useState('');
+
   useEffect(() => {
     async function fetchProduto() {
       if (!id) return;
@@ -26,7 +29,10 @@ export default function ProdutoDetalhes() {
         .eq('id', id)
         .single();
 
-      if (!error) setProduto(data);
+      if (!error && data) {
+        setProduto(data);
+        setFotoAtiva(data.imagem_url); // Define a foto principal como inicial
+      }
       setLoading(false);
     }
     fetchProduto();
@@ -69,6 +75,9 @@ export default function ProdutoDetalhes() {
   if (!produto) return <div className="min-h-screen bg-white p-20 text-center font-bold">Produto não encontrado.</div>;
 
   const precoRiscado = produto.preco_antigo || (produto.preco * 1.2);
+  
+  // ARRAY DA GALERIA
+  const galeria = [produto.imagem_url, ...(produto.imagens_secundarias || [])].filter(url => url !== '');
 
   return (
     <main className="min-h-screen bg-[#f2f3f4] pb-12">
@@ -83,12 +92,29 @@ export default function ProdutoDetalhes() {
       <div className="container mx-auto px-4">
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 lg:p-10 flex flex-col lg:flex-row gap-10">
           
+          {/* LADO ESQUERDO: IMAGEM PRINCIPAL + CARROSSEL */}
           <div className="flex-1 flex flex-col items-center">
-            <div className="w-full max-w-[500px] aspect-square flex items-center justify-center border border-gray-50 rounded-lg p-4">
-              <img src={produto.imagem_url} alt={produto.nome} className="max-w-full max-h-full object-contain transition-transform hover:scale-105" />
+            <div className="w-full max-w-[500px] aspect-square flex items-center justify-center border border-gray-50 rounded-lg p-4 bg-white">
+              <img src={fotoAtiva} alt={produto.nome} className="max-w-full max-h-full object-contain transition-transform hover:scale-105" />
             </div>
+            
+            {/* MINIATURAS (CARROSSEL) */}
+            {galeria.length > 1 && (
+              <div className="flex gap-2 mt-4 flex-wrap justify-center">
+                {galeria.map((img, index) => (
+                  <div 
+                    key={index}
+                    onClick={() => setFotoAtiva(img)}
+                    className={`w-16 h-16 border-2 rounded-lg p-1 cursor-pointer transition-all ${fotoAtiva === img ? 'border-[#E21E26] bg-red-50' : 'border-gray-100 hover:border-gray-300'}`}
+                  >
+                    <img src={img} className="w-full h-full object-contain" alt={`miniatura-${index}`} />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
+          {/* LADO DIREITO: INFORMAÇÕES E COMPRA */}
           <div className="flex-1 flex flex-col">
             <div className="mb-6">
               <span className="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">
@@ -96,6 +122,18 @@ export default function ProdutoDetalhes() {
               </span>
               <h1 className="text-2xl lg:text-3xl font-bold text-[#1f2937] mt-3 leading-tight">{produto.nome}</h1>
             </div>
+
+            {/* SEÇÃO "SOBRE O PRODUTO" */}
+            {produto.descricao && (
+              <div className="mb-6">
+                <h3 className="text-xs font-black text-gray-800 uppercase flex items-center gap-2 mb-2 italic">
+                  <span className="w-1 h-3 bg-[#E21E26]"></span> Sobre o Produto
+                </h3>
+                <p className="text-sm text-gray-500 leading-relaxed whitespace-pre-wrap">
+                  {produto.descricao}
+                </p>
+              </div>
+            )}
 
             <div className="bg-gray-50 rounded-2xl p-6 mb-6">
               <div className="flex flex-col text-black">
@@ -123,7 +161,7 @@ export default function ProdutoDetalhes() {
             </button>
 
             <div className="mt-4 border-t border-gray-100 pt-6">
-              <div className="flex items-center gap-3 text-gray-600 text-sm font-bold uppercase text-xs">
+              <div className="flex items-center gap-3 text-gray-600 text-sm font-bold uppercase text-[10px]">
                 <span>Consultar frete (Saída: Recife)</span>
               </div>
               <div className="flex mt-3 gap-2">

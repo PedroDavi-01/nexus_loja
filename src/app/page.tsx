@@ -115,7 +115,7 @@ export default function HomePage() {
       {/* --- HEADER DE PRODUTOS + BOTÃO ADMIN --- */}
       <div className="flex items-center justify-between my-10">
         <h3 className="border-l-[6px] border-[#E21E26] pl-4 text-2xl font-extrabold uppercase">
-          Ofertas em Destaque
+          Produtos em Estoque
         </h3>
         
         {/* Só renderiza o botão se o carregamento acabou E for admin */}

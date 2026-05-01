@@ -12,7 +12,18 @@ export default function CategoryPage() {
 
   useEffect(() => {
     async function fetchCategoryData() {
-      const { data } = await supabase.from('produtos').select('*').ilike('categoria', `%${slug}%`);
+      if (!slug) return;
+
+      // Converte "pc-gamer" para "pc gamer" para buscar das duas formas
+      const slugComEspaco = String(slug).replace(/-/g, ' ');
+
+      const { data } = await supabase
+        .from('produtos')
+        .select('*')
+        // Busca ignorando maiúsculas e aceitando com traço ou com espaço
+        .or(`categoria.ilike.%${slug}%,categoria.ilike.%${slugComEspaco}%`)
+        .order('created_at', { ascending: false });
+
       setProdutos(data || []);
 
       const { data: { session } } = await supabase.auth.getSession();
@@ -32,22 +43,28 @@ export default function CategoryPage() {
   };
 
   return (
-    <main className="container mx-auto px-4">
-      <h3 className="my-10 border-l-[6px] border-[#E21E26] pl-4 text-2xl font-extrabold uppercase">
-        Categoria: {slug}
+    <main className="container mx-auto px-4 pb-20">
+      <h3 className="my-10 border-l-[6px] border-[#E21E26] pl-4 text-2xl font-extrabold uppercase italic">
+        Categoria: <span className="text-[#E21E26]">{slug}</span>
       </h3>
 
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-12">
-        {produtos.map((produto) => (
-          <ProductCard 
-            key={produto.id} 
-            produto={produto} 
-            isAdmin={isAdmin} 
-            onDelete={handleDelete} 
-            onEdit={() => {}} 
-          />
-        ))}
-      </section>
+      {produtos.length > 0 ? (
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-12">
+          {produtos.map((produto) => (
+            <ProductCard 
+              key={produto.id} 
+              produto={produto} 
+              isAdmin={isAdmin} 
+              onDelete={handleDelete} 
+              onEdit={() => {}} 
+            />
+          ))}
+        </section>
+      ) : (
+        <div className="bg-white p-20 rounded-2xl text-center border-2 border-dashed border-gray-200">
+           <p className="text-gray-400 font-bold uppercase">Nenhum produto encontrado nesta categoria.</p>
+        </div>
+      )}
     </main>
   );
 }

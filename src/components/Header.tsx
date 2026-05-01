@@ -150,12 +150,6 @@ export default function Header() {
           <li className="text-gray-400 hover:text-white transition">
             <Link href="/categoria/monitores">Monitores</Link>
           </li>
-          
-          <li className="ml-auto">
-            <Link href="/ofertas" className="text-[#E21E26] hover:brightness-125 transition font-black flex items-center gap-2">
-              <i className="fa-solid fa-fire-flame-curved"></i> Ofertas do Dia
-            </Link>
-          </li>
         </ul>
       </nav>
     </header>

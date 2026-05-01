@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, ImageUp } from 'lucide-react'
+import { X, ImageUp, AlignLeft } from 'lucide-react'
 import { supabase } from '@/src/lib/supabase'
 
 interface ProductModalProps {
@@ -17,9 +17,12 @@ export default function ProductModal({ isOpen, onClose, onSuccess, produtoParaEd
   const [precoAntigo, setPrecoAntigo] = useState('')
   const [marca, setMarca] = useState('')
   const [categoria, setCategoria] = useState('')
-  const [imagemUrl, setImagemUrl] = useState('')
   const [desconto, setDesconto] = useState('')
   const [loading, setLoading] = useState(false)
+  
+  // NOVOS ESTADOS PARA SLOTS E DESCRIÇÃO
+  const [descricao, setDescricao] = useState('')
+  const [imagens, setImagens] = useState<string[]>(['', '', '', ''])
 
   useEffect(() => {
     if (produtoParaEditar) {
@@ -28,25 +31,35 @@ export default function ProductModal({ isOpen, onClose, onSuccess, produtoParaEd
       setPrecoAntigo(produtoParaEditar.preco_antigo?.toString() || '')
       setMarca(produtoParaEditar.marca || '')
       setCategoria(produtoParaEditar.categoria || '')
-      setImagemUrl(produtoParaEditar.imagem_url)
       setDesconto(produtoParaEditar.desconto?.toString() || '')
+      setDescricao(produtoParaEditar.descricao || '')
+      
+      // Organiza as imagens do banco nos 4 slots
+      const fotos = [
+        produtoParaEditar.imagem_url || '',
+        ...(produtoParaEditar.imagens_secundarias || [])
+      ]
+      setImagens([...fotos, '', '', '', ''].slice(0, 4))
     } else {
-      setNome(''); setPreco(''); setPrecoAntigo(''); setMarca(''); setCategoria(''); setImagemUrl(''); setDesconto('')
+      setNome(''); setPreco(''); setPrecoAntigo(''); setMarca(''); setCategoria(''); setDesconto('');
+      setDescricao(''); setImagens(['', '', '', ''])
     }
   }, [produtoParaEditar, isOpen])
 
   if (!isOpen) return null
 
-  const handleFileClick = () => {
-    document.getElementById('fileInput')?.click()
+  const normalizarCategoria = (texto: string) => {
+    return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-').trim();
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
       const reader = new FileReader()
       reader.onloadend = () => {
-        setImagemUrl(reader.result as string)
+        const novasImagens = [...imagens]
+        novasImagens[index] = reader.result as string
+        setImagens(novasImagens)
       }
       reader.readAsDataURL(file)
     }
@@ -56,36 +69,33 @@ export default function ProductModal({ isOpen, onClose, onSuccess, produtoParaEd
     e.preventDefault()
     setLoading(true)
 
+    // Separa a primeira imagem das secundárias
+    const [fotoPrincipal, ...fotosSecundarias] = imagens
+    const secundariasFiltradas = fotosSecundarias.filter(url => url !== '')
+
     const dadosProduto = {
       nome,
       preco: parseFloat(preco),
       preco_antigo: precoAntigo ? parseFloat(precoAntigo) : null,
       marca: marca || 'Nexus Gaming',
-      categoria: categoria.toLowerCase().trim(),
-      imagem_url: imagemUrl,
+      categoria: normalizarCategoria(categoria),
+      imagem_url: fotoPrincipal,
+      imagens_secundarias: secundariasFiltradas,
       desconto: desconto ? parseInt(desconto) : null,
+      descricao
     }
 
     let error;
     if (produtoParaEditar) {
-      const { error: err } = await supabase
-        .from('produtos')
-        .update(dadosProduto)
-        .eq('id', produtoParaEditar.id)
+      const { error: err } = await supabase.from('produtos').update(dadosProduto).eq('id', produtoParaEditar.id)
       error = err
     } else {
-      const { error: err } = await supabase
-        .from('produtos')
-        .insert([dadosProduto])
+      const { error: err } = await supabase.from('produtos').insert([dadosProduto])
       error = err
     }
 
-    if (error) {
-      alert("Erro ao salvar na Nexus: " + error.message)
-    } else {
-      onSuccess()
-      onClose()
-    }
+    if (error) alert("Erro ao salvar na Nexus: " + error.message)
+    else { onSuccess(); onClose(); }
     setLoading(false)
   }
 
@@ -100,50 +110,35 @@ export default function ProductModal({ isOpen, onClose, onSuccess, produtoParaEd
             </h2>
             <span className="text-red-200 text-[10px] font-bold uppercase tracking-widest">Painel de Administração</span>
           </div>
-          <button 
-            onClick={onClose} 
-            className="bg-white/10 p-2 rounded-full text-white hover:bg-white hover:text-[#E21E26] transition-all hover:rotate-90"
-          >
+          <button onClick={onClose} className="bg-white/10 p-2 rounded-full text-white hover:bg-white hover:text-[#E21E26] transition-all hover:rotate-90">
             <X size={24} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 overflow-y-auto no-scrollbar flex flex-col gap-6">
+          
+          {/* SEÇÃO DE SLOTS DE IMAGEM */}
           <div className="flex flex-col gap-3">
             <label className="text-[11px] font-black uppercase text-gray-500 flex items-center gap-2">
-              <ImageUp size={14} /> Visual do Produto
+              <ImageUp size={14} /> Galeria do Produto (4 Slots)
             </label>
-            <div 
-              onClick={handleFileClick}
-              className="group relative w-full h-44 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-[#E21E26] hover:bg-red-50 transition-all overflow-hidden"
-            >
-              {imagemUrl ? (
-                <>
-                  <img src={imagemUrl} alt="Preview" className="w-full h-full object-contain p-4" />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
-                    <div className="bg-white text-black px-4 py-2 rounded-full font-bold text-xs uppercase italic flex items-center gap-2">
-                      <ImageUp size={16} /> Trocar Foto
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center p-6">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:bg-red-100 transition-colors">
-                    <ImageUp size={28} className="text-gray-400 group-hover:text-[#E21E26]" />
-                  </div>
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-tighter group-hover:text-[#E21E26]">Clique para abrir a galeria</p>
+            <div className="grid grid-cols-4 gap-3">
+              {imagens.map((url, index) => (
+                <div key={index} className="relative group aspect-square border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center cursor-pointer hover:border-[#E21E26] hover:bg-red-50 transition-all overflow-hidden bg-gray-50">
+                  {url ? (
+                    <img src={url} alt="Preview" className="w-full h-full object-contain p-2" />
+                  ) : (
+                    <ImageUp size={20} className="text-gray-300 group-hover:text-[#E21E26]" />
+                  )}
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={(e) => handleFileChange(index, e)} 
+                    className="absolute inset-0 opacity-0 cursor-pointer" 
+                  />
                 </div>
-              )}
+              ))}
             </div>
-            <input id="fileInput" type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-            
-            <input 
-              type="text" 
-              placeholder="Ou cole a URL da imagem aqui..."
-              value={imagemUrl}
-              onChange={e => setImagemUrl(e.target.value)}
-              className="text-[11px] p-3 bg-gray-50 rounded-lg text-gray-500 italic border border-transparent focus:border-gray-200 outline-none transition-all"
-            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -182,6 +177,20 @@ export default function ProductModal({ isOpen, onClose, onSuccess, produtoParaEd
               <input type="number" value={desconto} onChange={e => setDesconto(e.target.value)} placeholder="Ex: 20"
                 className="w-full p-4 bg-gray-100 rounded-xl text-black font-semibold outline-none border-2 border-transparent focus:border-[#E21E26] transition-all" />
             </div>
+          </div>
+
+          {/* NOVO CAMPO DE DESCRIÇÃO */}
+          <div>
+            <label className="text-[11px] font-black uppercase text-gray-500 flex items-center gap-2">
+              <AlignLeft size={14} /> Sobre o Produto
+            </label>
+            <textarea 
+              value={descricao} 
+              onChange={e => setDescricao(e.target.value)} 
+              rows={4}
+              className="w-full p-4 bg-gray-100 rounded-xl text-black outline-none border-2 border-transparent focus:border-[#E21E26] transition-all resize-none text-sm font-medium"
+              placeholder="Descreva as especificações técnicas..."
+            />
           </div>
 
           <button 
