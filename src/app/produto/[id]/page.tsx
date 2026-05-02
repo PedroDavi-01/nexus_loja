@@ -86,7 +86,7 @@ export default function ProdutoDetalhes() {
         <span className="mx-2">&gt;</span> 
         <span className="uppercase">{produto.categoria || 'Hardware'}</span>
         <span className="mx-2">&gt;</span> 
-        <strong className="text-gray-800">Código: {String(produto.id).padStart(6, '0')}</strong>
+        <strong className="text-gray-800">{String(produto.nome).padStart(6, '0')}</strong>
       </div>
 
       <div className="container mx-auto px-4">
