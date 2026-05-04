@@ -103,13 +103,18 @@ export default function Header() {
               </button>
             </div>
           ) : (
-            <Link href="/login" className="hidden lg:flex items-center gap-3 cursor-pointer hover:text-gray-300 transition">
+            <div className="hidden lg:flex items-center gap-3 cursor-pointer">
               <i className="fa-regular fa-circle-user text-2xl text-[#E21E26]"></i>
-              <div className="flex flex-col">
-                <span className="text-[10px] leading-tight uppercase text-gray-400 font-black">Entre ou</span>
-                <span className="text-xs font-bold leading-tight uppercase">Cadastre-se</span>
+              <div className="flex items-center gap-1">
+                <Link href="/login">
+                <span className="text-xs font-bold leading-tight hover:text-gray-300 transition">Entre</span>
+                </Link>
+                <span className='text-[10px] leading-tight uppercase text-gray-400 font-black'>ou</span>
+                <Link href="/cadastro">
+                 <span className="text-xs font-bold leading-tight hover:text-gray-300 transition">Cadastre-se</span>
+                </Link>
               </div>
-            </Link>
+            </div>
           )}
 
           {/* ÍCONE DO CARRINHO */}
