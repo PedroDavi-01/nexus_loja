@@ -7,36 +7,40 @@ import ProductCard from '@/src/components/ProductCard';
 import ProductModal from '@/src/components/ProductModal';
 import { Plus } from 'lucide-react';
 
+// Imports do Swiper
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, Pagination, Navigation } from 'swiper/modules';
+
+// Estilos do Swiper
+import 'swiper/css';
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
+
 export default function HomePage() {
   const [produtos, setProdutos] = useState<any[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [loadingAuth, setLoadingAuth] = useState(true); // Para evitar o erro de sumir botões
+  const [loadingAuth, setLoadingAuth] = useState(true);
   
-  // Estados para o Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [produtoSelecionado, setProdutoSelecionado] = useState<any>(null);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        // 1. Busca os produtos
         const { data: prodData } = await supabase
           .from('produtos')
           .select('*')
           .order('created_at', { ascending: false });
         setProdutos(prodData || []);
 
-        // 2. Verifica a sessão do usuário
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session) {
-          // 3. Busca o perfil (sem usar .single() para evitar o erro do JSON)
           const { data: perfis } = await supabase
             .from('perfis')
             .select('role')
             .eq('id', session.user.id);
           
-          // Se encontrou o perfil e o role for admin
           if (perfis && perfis.length > 0 && perfis[0].role === 'admin') {
             setIsAdmin(true);
           }
@@ -44,7 +48,7 @@ export default function HomePage() {
       } catch (error) {
         console.error("Erro no carregamento:", error);
       } finally {
-        setLoadingAuth(false); // Terminou de checar tudo
+        setLoadingAuth(false);
       }
     }
     fetchData();
@@ -73,22 +77,87 @@ export default function HomePage() {
 
   return (
     <main className="container mx-auto px-4 pb-12">
-      {/* --- BANNER ORIGINAL --- */}
-      <section className="my-6 rounded-xl overflow-hidden h-[320px] bg-gradient-to-br from-[#4b0003] to-[#0b0b0b] flex items-center shadow-lg">
-        <div className="p-8 md:p-16 text-white">
-          <h2 className="text-4xl md:text-5xl font-black leading-tight mb-4 italic uppercase">
-            Festival de Cupons Nexus
-          </h2>
-          <p className="text-lg text-gray-300 mb-6">
-            Os melhores setups com preços imbatíveis e entrega rápida.
-          </p>
-          <button className="bg-[#E21E26] text-white px-9 py-3.5 font-bold rounded uppercase transition hover:scale-105 hover:bg-[#f0242b]">
-            Aproveitar Agora
-          </button>
-        </div>
+      
+      {/* --- CARROSSEL DE BANNERS --- */}
+      <section className="my-6 rounded-xl overflow-hidden h-[350px] md:h-[450px] shadow-2xl">
+        <Swiper
+          spaceBetween={0}
+          centeredSlides={true}
+          autoplay={{
+            delay: 5000,
+            disableOnInteraction: false,
+          }}
+          pagination={{
+            clickable: true,
+            dynamicBullets: true,
+          }}
+          navigation={true}
+          modules={[Autoplay, Pagination, Navigation]}
+          className="h-full w-full"
+        >
+          {/* Slide 1 - Estilo Original */}
+                    <SwiperSlide>
+            <div className="relative h-full w-full bg-[#111] flex items-center">
+              <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1603481588273-2f908a9a7a1b?q=80&w=2070)] bg-cover bg-center opacity-40"></div>
+              <div className="p-8 md:p-16 text-white z-10 w-full text-center">
+                <h2 className="text-4xl md:text-6xl font-black mb-4 uppercase tracking-tighter">
+                  Aproveite as promoções da Nexus
+                </h2>
+                <p className="text-xl text-gray-200 mb-8">
+                  Produtos com até 30% OFF.
+                </p>
+                <Link href="categoria/perifericos">
+                <button className="bg-white text-black px-12 py-4 font-black rounded uppercase hover:bg-[#E21E26] hover:text-white transition-all">
+                Aproveite agora
+                </button>
+                </Link>
+              </div>
+            </div>
+          </SwiperSlide>
+
+          {/* Slide 2 - Promoção de Periféricos */}
+          <SwiperSlide>
+            <div className="relative h-full w-full bg-[#111] flex items-center">
+              <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070')] bg-cover bg-center opacity-40"></div>
+              <div className="p-8 md:p-16 text-white z-10 w-full text-center">
+                <h2 className="text-4xl md:text-6xl font-black mb-4 uppercase tracking-tighter">
+                  Linha Gamer Profissional
+                </h2>
+                <p className="text-xl text-gray-200 mb-8">
+                  Teclados mecânicos, mouses e headsets com até 30% OFF.
+                </p>
+                <Link href="categoria/perifericos">
+                <button className="bg-white text-black px-12 py-4 font-black rounded uppercase hover:bg-[#E21E26] hover:text-white transition-all">
+                Ver Periféricos
+                </button>
+                </Link>
+              </div>
+            </div>
+          </SwiperSlide>
+
+          {/* Slide 3 - Hardware */}
+          <SwiperSlide>
+            <div className="relative h-full w-full bg-[#050505] flex items-center justify-end">
+              <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1591488320449-011701bb6704?q=80&w=2070')] bg-cover bg-center opacity-30"></div>
+              <div className="p-8 md:p-16 text-white z-10 text-right">
+                <h2 className="text-4xl md:text-5xl font-black mb-4 uppercase italic">
+                  Upgrade de Respeito
+                </h2>
+                <p className="text-lg text-gray-300 mb-6">
+                  As melhores placas de vídeo e processadores do mercado.
+                </p>
+                <Link href="categoria/hardware">
+                <button className="border-2 border-[#E21E26] text-white px-9 py-3.5 font-bold rounded uphover:bg-[#E21E26] transition-all">
+                  Montar meu PC
+                </button>
+                </Link>
+              </div>
+            </div>
+          </SwiperSlide>
+        </Swiper>
       </section>
 
-      {/* --- CATEGORIAS ORIGINAIS --- */}
+      {/* --- CATEGORIAS --- */}
       <section className="flex justify-between py-8 gap-4 overflow-x-auto no-scrollbar">
         {[
           { name: 'Hardware', icon: 'fa-microchip' },
@@ -118,7 +187,6 @@ export default function HomePage() {
           Produtos em Estoque
         </h3>
         
-        {/* Só renderiza o botão se o carregamento acabou E for admin */}
         {!loadingAuth && isAdmin && (
           <button 
             onClick={handleOpenCreateModal}
@@ -135,7 +203,7 @@ export default function HomePage() {
           <ProductCard 
             key={produto.id} 
             produto={produto} 
-            isAdmin={isAdmin} // Aqui o card recebe se deve mostrar os ícones ou não
+            isAdmin={isAdmin} 
             onDelete={handleDelete} 
             onEdit={handleOpenEditModal} 
           />
@@ -148,7 +216,6 @@ export default function HomePage() {
         onClose={() => setIsModalOpen(false)} 
         produtoParaEditar={produtoSelecionado}
         onSuccess={() => {
-          // Em vez de reload, poderiamos atualizar o estado, mas reload é mais seguro por enquanto
           window.location.reload();
         }} 
       />

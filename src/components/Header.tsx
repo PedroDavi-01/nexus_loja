@@ -105,13 +105,13 @@ export default function Header() {
           ) : (
             <div className="hidden lg:flex items-center gap-3 cursor-pointer">
               <i className="fa-regular fa-circle-user text-2xl text-[#E21E26]"></i>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center content-center gap-1">
                 <Link href="/login">
-                <span className="text-xs font-bold leading-tight hover:text-gray-300 transition">Entre</span>
+                <span className="text-xs font-bold leading-tight uppercase hover:text-gray-300 transition">Entre</span>
                 </Link>
                 <span className='text-[10px] leading-tight uppercase text-gray-400 font-black'>ou</span>
                 <Link href="/cadastro">
-                 <span className="text-xs font-bold leading-tight hover:text-gray-300 transition">Cadastre-se</span>
+                 <span className="text-xs font-bold leading-tight uppercase hover:text-gray-300 transition">Cadastre-se</span>
                 </Link>
               </div>
             </div>
@@ -135,10 +135,6 @@ export default function Header() {
       {/* NAVEGAÇÃO SECUNDÁRIA */}
       <nav className="bg-[#1F1F1F] py-3 shadow-inner">
         <ul className="container mx-auto px-4 flex gap-8 text-[13px] font-bold uppercase overflow-x-auto no-scrollbar whitespace-nowrap items-center">
-          
-          <li className="text-white cursor-pointer hover:text-[#E21E26] flex items-center gap-2 border-r border-gray-700 pr-4">
-            <i className="fa-solid fa-bars text-[#E21E26]"></i> Departamentos
-          </li>
 
           <li className="text-gray-400 hover:text-white transition">
             <Link href="/categoria/hardware">Hardware</Link>
