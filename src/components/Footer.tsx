@@ -60,19 +60,19 @@ export default function Footer() {
             </h3>
 
             <ul className="space-y-3 text-sm text-gray-400">
-              {[
-                <Link href="/categoria/hardware">Hardware</Link>,
-                <Link href="/categoria/pc-gamer">Pc Gamer</Link>,
-                <Link href="/categoria/perifericos">Periféricos</Link>,
-                <Link href="/categoria/monitores">Monitores</Link>,
-              ].map((item) => (
-                <li
-                  key={item}
-                  className="hover:text-white hover:translate-x-1 transition-all cursor-pointer"
-                >
-                  {item}
-                </li>
-              ))}
+{[
+  { name: 'Hardware', href: '/categoria/hardware' },
+  { name: 'Pc Gamer', href: '/categoria/pc-gamer' },
+  { name: 'Periféricos', href: '/categoria/perifericos' },
+  { name: 'Monitores', href: '/categoria/monitores' },
+].map((item) => (
+  <li
+    key={item.href} // Usamos o href como chave única
+    className="hover:text-white hover:translate-x-1 transition-all cursor-pointer"
+  >
+    <Link href={item.href}>{item.name}</Link>
+  </li>
+))}
             </ul>
           </div>
 
