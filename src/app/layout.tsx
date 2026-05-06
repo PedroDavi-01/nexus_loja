@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-br">
+    <html lang="pt-br" className="dark" style={{ colorScheme: 'dark' }}>
       <head>
         
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
@@ -26,7 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
       </head>
-      <body className="flex flex-col min-h-screen bg-[#F2F3F4]">
+      <body className="flex flex-col min-h-screen bg-[#050505] text-white antialiased">
         <CartProvider>
           <Header />
           <CartSidebar />
