@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, ImageUp, AlignLeft } from 'lucide-react'
+import { X, ImageUp, AlignLeft, Box, AlertTriangle } from 'lucide-react' 
 import { supabase } from '@/src/lib/supabase'
 
 interface ProductModalProps {
@@ -20,7 +20,9 @@ export default function ProductModal({ isOpen, onClose, onSuccess, produtoParaEd
   const [desconto, setDesconto] = useState('')
   const [loading, setLoading] = useState(false)
   
-  // NOVOS ESTADOS PARA SLOTS E DESCRIÇÃO
+  const [estoque, setEstoque] = useState('')
+  const [stockMinimo, setStockMinimo] = useState('')
+  
   const [descricao, setDescricao] = useState('')
   const [imagens, setImagens] = useState<string[]>(['', '', '', ''])
 
@@ -33,8 +35,9 @@ export default function ProductModal({ isOpen, onClose, onSuccess, produtoParaEd
       setCategoria(produtoParaEditar.categoria || '')
       setDesconto(produtoParaEditar.desconto?.toString() || '')
       setDescricao(produtoParaEditar.descricao || '')
+      setEstoque(produtoParaEditar.estoque?.toString() || '0')
+      setStockMinimo(produtoParaEditar.stock_minimo?.toString() || '0')
       
-      // Organiza as imagens do banco nos 4 slots
       const fotos = [
         produtoParaEditar.imagem_url || '',
         ...(produtoParaEditar.imagens_secundarias || [])
@@ -42,7 +45,7 @@ export default function ProductModal({ isOpen, onClose, onSuccess, produtoParaEd
       setImagens([...fotos, '', '', '', ''].slice(0, 4))
     } else {
       setNome(''); setPreco(''); setPrecoAntigo(''); setMarca(''); setCategoria(''); setDesconto('');
-      setDescricao(''); setImagens(['', '', '', ''])
+      setDescricao(''); setImagens(['', '', '', '']); setEstoque(''); setStockMinimo('');
     }
   }, [produtoParaEditar, isOpen])
 
@@ -69,7 +72,6 @@ export default function ProductModal({ isOpen, onClose, onSuccess, produtoParaEd
     e.preventDefault()
     setLoading(true)
 
-    // Separa a primeira imagem das secundárias
     const [fotoPrincipal, ...fotosSecundarias] = imagens
     const secundariasFiltradas = fotosSecundarias.filter(url => url !== '')
 
@@ -82,7 +84,9 @@ export default function ProductModal({ isOpen, onClose, onSuccess, produtoParaEd
       imagem_url: fotoPrincipal,
       imagens_secundarias: secundariasFiltradas,
       desconto: desconto ? parseInt(desconto) : null,
-      descricao
+      descricao,
+      estoque: parseInt(estoque) || 0,
+      stock_minimo: parseInt(stockMinimo) || 0
     }
 
     let error;
@@ -117,34 +121,55 @@ export default function ProductModal({ isOpen, onClose, onSuccess, produtoParaEd
 
         <form onSubmit={handleSubmit} className="p-8 overflow-y-auto no-scrollbar flex flex-col gap-6">
           
-          {/* SEÇÃO DE SLOTS DE IMAGEM */}
           <div className="flex flex-col gap-3">
-            <label className="text-[11px] font-black uppercase text-gray-500 flex items-center gap-2">
-              <ImageUp size={14} /> Galeria do Produto (4 Slots)
-            </label>
-            <div className="grid grid-cols-4 gap-3">
-              {imagens.map((url, index) => (
-                <div key={index} className="relative group aspect-square border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center cursor-pointer hover:border-[#E21E26] hover:bg-red-50 transition-all overflow-hidden bg-gray-50">
-                  {url ? (
-                    <img src={url} alt="Preview" className="w-full h-full object-contain p-2" />
-                  ) : (
-                    <ImageUp size={20} className="text-gray-300 group-hover:text-[#E21E26]" />
-                  )}
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    onChange={(e) => handleFileChange(index, e)} 
-                    className="absolute inset-0 opacity-0 cursor-pointer" 
-                  />
-                </div>
-              ))}
-            </div>
+             <label className="text-[11px] font-black uppercase text-gray-500 flex items-center gap-2">
+               <ImageUp size={14} /> Galeria do Produto (4 Slots)
+             </label>
+             <div className="grid grid-cols-4 gap-3">
+               {imagens.map((url, index) => (
+                 <div key={index} className="relative group aspect-square border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center cursor-pointer hover:border-[#E21E26] hover:bg-red-50 transition-all overflow-hidden bg-gray-50">
+                   {url ? <img src={url} alt="Preview" className="w-full h-full object-contain p-2" /> : <ImageUp size={20} className="text-gray-300 group-hover:text-[#E21E26]" />}
+                   <input type="file" accept="image/*" onChange={(e) => handleFileChange(index, e)} className="absolute inset-0 opacity-0 cursor-pointer" />
+                 </div>
+               ))}
+             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="md:col-span-2">
               <label className="text-[11px] font-black uppercase text-gray-500">Nome do Produto</label>
               <input type="text" value={nome} onChange={e => setNome(e.target.value)} required placeholder="Ex: Teclado Mecânico RGB"
+                className="w-full p-4 bg-gray-100 rounded-xl text-black font-semibold outline-none border-2 border-transparent focus:border-[#E21E26] transition-all" />
+            </div>
+
+            <div className="bg-red-50/50 p-4 rounded-2xl border border-red-100 flex flex-col gap-4 md:col-span-2">
+                <span className="text-[10px] font-black uppercase text-[#E21E26] flex items-center gap-2 tracking-widest">
+                    <Box size={14} /> Controle de Inventário
+                </span>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1">Estoque Atual</label>
+                        <input type="number" value={estoque} onChange={e => setEstoque(e.target.value)} required placeholder="Qtd"
+                            className="w-full p-3 bg-white border border-gray-200 rounded-lg text-black font-bold outline-none focus:border-[#E21E26]" />
+                    </div>
+                    <div>
+                        <label className="text-[10px] font-bold uppercase text-gray-400 block mb-1 text-right">Alerta Mínimo</label>
+                        <input type="number" value={stockMinimo} onChange={e => setStockMinimo(e.target.value)} required placeholder="Mín"
+                            className="w-full p-3 bg-white border border-gray-200 rounded-lg text-black font-bold outline-none focus:border-[#E21E26] text-right" />
+                    </div>
+                </div>
+            </div>
+
+            <div>
+              <label className="text-[11px] font-black uppercase text-gray-500">Preço Atual (R$)</label>
+              <input type="number" step="0.01" value={preco} onChange={e => setPreco(e.target.value)} required placeholder="0,00"
+                className="w-full p-4 bg-gray-100 rounded-xl text-black font-semibold outline-none border-2 border-transparent focus:border-[#E21E26] transition-all" />
+            </div>
+
+            {/* CAMPO ADICIONADO: PREÇO ANTIGO */}
+            <div>
+              <label className="text-[11px] font-black uppercase text-gray-500">Preço Riscado (R$)</label>
+              <input type="number" step="0.01" value={precoAntigo} onChange={e => setPrecoAntigo(e.target.value)} placeholder="Ex: 599.90"
                 className="w-full p-4 bg-gray-100 rounded-xl text-black font-semibold outline-none border-2 border-transparent focus:border-[#E21E26] transition-all" />
             </div>
 
@@ -159,19 +184,8 @@ export default function ProductModal({ isOpen, onClose, onSuccess, produtoParaEd
               <input type="text" value={categoria} onChange={e => setCategoria(e.target.value)} placeholder="hardware, perifericos..."
                 className="w-full p-4 bg-gray-100 rounded-xl text-black font-semibold outline-none border-2 border-transparent focus:border-[#E21E26] transition-all" />
             </div>
-
-            <div>
-              <label className="text-[11px] font-black uppercase text-gray-500">Preço Atual (R$)</label>
-              <input type="number" step="0.01" value={preco} onChange={e => setPreco(e.target.value)} required placeholder="0,00"
-                className="w-full p-4 bg-gray-100 rounded-xl text-black font-semibold outline-none border-2 border-transparent focus:border-[#E21E26] transition-all" />
-            </div>
-
-            <div>
-              <label className="text-[11px] font-black uppercase text-gray-500">Preço Riscado (R$)</label>
-              <input type="number" step="0.01" value={precoAntigo} onChange={e => setPrecoAntigo(e.target.value)} placeholder="Opcional"
-                className="w-full p-4 bg-gray-100 rounded-xl text-black font-semibold outline-none border-2 border-transparent focus:border-[#E21E26] transition-all" />
-            </div>
-
+            
+            {/* DESCONTO MOVIDO PARA BAIXO PARA MANTER O GRID ALINHADO */}
             <div className="md:col-span-2">
               <label className="text-[11px] font-black uppercase text-gray-500">Desconto (%)</label>
               <input type="number" value={desconto} onChange={e => setDesconto(e.target.value)} placeholder="Ex: 20"
@@ -179,7 +193,6 @@ export default function ProductModal({ isOpen, onClose, onSuccess, produtoParaEd
             </div>
           </div>
 
-          {/* NOVO CAMPO DE DESCRIÇÃO */}
           <div>
             <label className="text-[11px] font-black uppercase text-gray-500 flex items-center gap-2">
               <AlignLeft size={14} /> Sobre o Produto
@@ -187,7 +200,7 @@ export default function ProductModal({ isOpen, onClose, onSuccess, produtoParaEd
             <textarea 
               value={descricao} 
               onChange={e => setDescricao(e.target.value)} 
-              rows={4}
+              rows={3}
               className="w-full p-4 bg-gray-100 rounded-xl text-black outline-none border-2 border-transparent focus:border-[#E21E26] transition-all resize-none text-sm font-medium"
               placeholder="Descreva as especificações técnicas..."
             />

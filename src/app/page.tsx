@@ -98,7 +98,7 @@ export default function HomePage() {
           {/* Slide 1 - Estilo Original */}
                     <SwiperSlide>
             <div className="relative h-full w-full bg-[#111] flex items-center">
-              <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1603481588273-2f908a9a7a1b?q=80&w=2070)] bg-cover bg-center opacity-40"></div>
+              <div className="absolute inset-0 bg-[url('https://images.pexels.com/photos/7776903/pexels-photo-7776903.jpeg')] bg-cover bg-center opacity-40"></div>
               <div className="p-8 md:p-16 text-white z-10 w-full text-center">
                 <h2 className="text-4xl md:text-6xl font-black mb-4 uppercase tracking-tighter">
                   Aproveite as promoções da Nexus

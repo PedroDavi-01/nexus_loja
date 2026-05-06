@@ -10,7 +10,7 @@ export default function CartSidebar() {
 
   const total = cart.reduce((acc, item) => acc + item.preco, 0)
 
-  const handleFinalizarCompra = async () => {
+ const handleFinalizarCompra = async () => {
     setFinalizando(true)
     try {
       const { data: { session } } = await supabase.auth.getSession()
@@ -20,7 +20,7 @@ export default function CartSidebar() {
         return
       }
 
-      // Criar o Pedido na tabela 'pedidos'
+      //  Criar o Pedido na tabela 'pedidos'
       const { data: pedido, error: errorPedido } = await supabase
         .from('pedidos')
         .insert([{ 
@@ -33,7 +33,7 @@ export default function CartSidebar() {
 
       if (errorPedido) throw errorPedido
 
-      // Criar os itens na tabela 'itens_pedido'
+      //  Preparar os itens do pedido
       const itensParaInserir = cart.map(item => ({
         pedido_id: pedido.id,
         produto_id: item.id,
@@ -41,16 +41,28 @@ export default function CartSidebar() {
         preco_unitario: item.preco
       }))
 
-      const { error: errorItens } = await supabase
-        .from('itens_pedido')
-        .insert(itensParaInserir)
+      // Preparar as MOVIMENTAÇÕES de saída
+      const movimentacoesParaInserir = cart.map(item => ({
+        produto_id: item.id,
+        tipo: 'saida',
+        quantidade: 1,
+        motivo: `Venda Online - Pedido #${pedido.id}`
+      }))
 
-      if (errorItens) throw errorItens
+      // 4. Executar as inserções no Supabase
+      const [resItens, resMov] = await Promise.all([
+        supabase.from('itens_pedido').insert(itensParaInserir),
+        supabase.from('movimentacoes').insert(movimentacoesParaInserir)
+      ])
 
-      alert("Nexus System: Compra registrada com sucesso!")
-      clearCart() // Limpa o estado do carrinho
+      if (resItens.error) throw resItens.error
+      if (resMov.error) throw resMov.error
+
+      alert("Compra realizada com sucesso!")
+      clearCart() 
       setIsModalOpen(false)
       toggleCart()
+      
     } catch (error: any) {
       alert("Erro ao processar compra: " + error.message)
     } finally {
